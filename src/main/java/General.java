@@ -13,21 +13,9 @@ abstract class General implements Serializable, Cloneable {
         return "Instance of " + this.getClass().getSimpleName();
     }
 
-    public boolean isInstanceOf(Class<?> clazz) {
-        return clazz.isInstance(this);
-    }
-
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-
-        return Objects.equals(this.toString(), obj.toString());
+        return super.equals(obj);
     }
 
     public String serialize() throws IOException {
@@ -46,33 +34,40 @@ abstract class General implements Serializable, Cloneable {
         return (General) in.readObject();
     }
 
-    public abstract General clone(); // создание нового объекта и глубокое копирование
-
-    public void copy(General other) {
-        if (other == null) {
-            throw new IllegalArgumentException("Cannot copy from null");
+    public <T> void deepCopy(T target) throws Exception{
+        try {
+            target = getCopy();
+        } catch (Exception e) {
+            throw e;
         }
-
-        deepCopy(other);
     }
 
-    public abstract void deepCopy(General general);
+    public <T> T deepClone() throws Exception {
+        try {
+            return getCopy();
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    private <T> T getCopy() throws Exception  {
+        try {
+            var byteArrayOutputStream = new ByteArrayOutputStream();
+            var objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject((T)this);
+            var bais = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            var objectInputStream = new ObjectInputStream(bais);
+
+            return (T) objectInputStream.readObject();
+        }
+        catch (Exception e) {
+            throw e;
+        }
+    }
 
 }
 
 class Any extends General {
 
-    @Override
-    public General clone() {
-        Any any = new Any();
-        deepCopy(any);
-
-        return any;
-    }
-
-    @Override
-    public void deepCopy(General general) {
-        // логика глубокого копирования
-    }
 }
 
